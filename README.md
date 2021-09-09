@@ -1,6 +1,7 @@
 # SheruProjectRepo
 # Submitted by Manan Batheja, BITS Pilani, 2017B2A40514P for the placement process of [SheruTezz](https://sheru.se/), ***Chalo Full Power***
 
+Please note, IOTProject has the React Web App, and SheruData has the TCP client-server architecture.
 ## Steps to run the project
 - Step 1: Install Java 1.8 and the corresponding JDK and JRE versions. Download
 eclipse (or any IDE)
