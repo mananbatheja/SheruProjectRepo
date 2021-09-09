@@ -1,0 +1,131 @@
+package serverClient;
+
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
+import java.io.*;
+import java.net.ConnectException;
+import java.net.NoRouteToHostException;
+import java.net.Socket;
+import java.net.URL;
+import java.net.UnknownHostException;
+
+
+/**
+
+ */
+public class client {
+
+    private String host;
+    private int port;
+    public Socket socket;
+    private static int f=1;
+    private final String DEFAULT_HOST = "localhost";
+    
+    public static void closeConnection() throws IOException{
+    	f=0;
+    }
+
+
+    public void connect(String host, int port) throws IOException {
+        this.host = host;
+        this.port = port;
+        socket = new Socket(host, port);
+        System.out.println("Client has been connected..");
+    }
+
+
+    /**
+     * use the JSON Protocol to receive a json object as
+     *  from the client and reconstructs that object
+     *
+     * @return JSONObejct with the same state (data) as
+     * the JSONObject the client sent as a String msg.
+     * @throws IOException
+     * @throws ClassNotFoundException 
+     */
+    public String receiveJSON() throws IOException, ClassNotFoundException {
+ 
+        InputStream in = socket.getInputStream();
+        ObjectInputStream i = new ObjectInputStream(in);
+        String line = null;
+        line = (String) i.readObject();
+        
+        if(line!=null)return line;
+        else return "";
+    }
+
+
+    public void sendJSON(JSONObject jsonObject) throws IOException, ParseException {
+    	
+         OutputStream out = socket.getOutputStream();
+        ObjectOutputStream o = new ObjectOutputStream(out);
+         o.writeObject(jsonObject);
+        out.flush();
+        System.out.println("Sent to server");
+    }
+    
+    public static void main(String[] args) throws  ParseException, IOException, ClassNotFoundException {
+        client client = new client();
+        try{
+                client.connect("localhost", 7777);
+                
+                // For JSON call sendJSON(JSON json) & receiveJSON();
+                JSONObject jsonObject2;
+                jsonObject2 = new JSONObject();
+                JSONParser parser = new JSONParser();
+                
+//                URL url = new URL("http://13.233.13.254:2222/xenergyData.json");
+                URL oracle = new URL("http://13.233.13.254:2222/xenergyData.json");
+                BufferedReader in = new BufferedReader(
+                    new InputStreamReader(oracle.openStream()));
+
+                String inputLine;
+                while ((inputLine = in.readLine()) != null) {
+                	System.out.println(inputLine);
+                	System.out.println();
+                	jsonObject2=new JSONObject(inputLine);
+                }
+                    
+                in.close();
+                client.sendJSON(jsonObject2);
+                
+                String str=client.receiveJSON();
+                
+        }
+
+        catch (ConnectException e) {
+            System.err.println(client.host + " connect refused");
+            return;
+        }
+
+        catch(UnknownHostException e){
+            System.err.println(client.host + " Unknown host");
+            client.host = client.DEFAULT_HOST;
+            return;
+        }
+
+        catch (NoRouteToHostException e) {
+            System.err.println(client.host + " Unreachable");
+            return;
+
+        }
+
+        catch (IllegalArgumentException e){
+            System.err.println(client.host + " wrong port");
+            return;
+        }
+
+        catch(IOException e){
+            System.err.println(client.host + ' ' + e.getMessage());
+            System.err.println(e);
+        }
+        finally {
+            	System.out.println("It hould have closed here");
+                client.socket.close();
+            
+        }
+
+    }
+}
